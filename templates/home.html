@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Book Alchemy – Library</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 24px; color: #1d2530; }
+      nav a { margin-right: 16px; }
+      .message { background: #e3f3ea; padding: 10px 14px; border-radius: 6px; }
+      .tools { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0; }
+      .book { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-top: 1px solid #dde2e8; }
+      .book img { width: 70px; }
+      .book h3 { margin: 0 0 4px; }
+      .book p { margin: 0 0 8px; color: #56616e; }
+    </style>
+  </head>
+  <body>
+
+    <h1>My Library</h1>
+    <nav>
+      <a href="{{ url_for('home') }}">Library</a>
+      <a href="{{ url_for('add_author') }}">Add author</a>
+      <a href="{{ url_for('add_book') }}">Add book</a>
+    </nav>
+
+    {% with messages = get_flashed_messages() %}
+      {% for message in messages %}
+        <p class="message">{{ message }}</p>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="tools">
+      <form action="{{ url_for('home') }}" method="GET">
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <input type="text" name="search" value="{{ search }}" placeholder="Search title or author">
+        <input type="submit" value="Search">
+        {% if search %}<a href="{{ url_for('home', sort=sort) }}">Clear</a>{% endif %}
+      </form>
+
+      <form action="{{ url_for('home') }}" method="GET">
+        <input type="hidden" name="search" value="{{ search }}">
+        <label for="sort">Sort by:</label>
+        <select id="sort" name="sort" onchange="this.form.submit()">
+          <option value="title" {% if sort == 'title' %}selected{% endif %}>Title</option>
+          <option value="author" {% if sort == 'author' %}selected{% endif %}>Author</option>
+        </select>
+        <noscript><input type="submit" value="Sort"></noscript>
+      </form>
+    </div>
+
+    {% if not books and search %}
+      <p>No books match "{{ search }}".</p>
+    {% elif not books %}
+      <p>No books yet. <a href="{{ url_for('add_book') }}">Add your first book</a>.</p>
+    {% endif %}
+
+    {% for book in books %}
+    <div class="book">
+      <img src="https://covers.openlibrary.org/b/isbn/{{ book.isbn }}-M.jpg?default=false"
+           alt="Cover of {{ book.title }}" onerror="this.style.visibility='hidden'">
+      <div>
+        <h3>{{ book.title }}</h3>
+        <p>by {{ book.author.name }}{% if book.publication_year %} · {{ book.publication_year }}{% endif %} · ISBN {{ book.isbn }}</p>
+        <form action="{{ url_for('delete_book', book_id=book.id) }}" method="POST">
+          <input type="submit" value="Delete Book">
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+
+  </body>
+</html>
